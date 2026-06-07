@@ -1,0 +1,48 @@
+# 스토어 등록 자료
+
+## 확장 이름
+
+Click Faster
+
+## 한 줄 설명
+
+모든 웹 동영상을 화면 클릭이나 누르기로 설정한 배속까지 빠르게 재생합니다.
+
+## 상세 설명
+
+Click Faster는 웹 페이지의 HTML 동영상을 더 빠르게 확인할 수 있게 해주는 브라우저 확장입니다. 동영상 화면을 누르고 있는 동안 설정한 배속으로 재생하고, 놓으면 원래 재생 속도로 돌아갑니다. 클릭 전환 모드를 선택하면 한 번 클릭해 빠른 재생을 켜고 다시 클릭해 원래 속도로 되돌릴 수 있습니다.
+
+## 주요 기능
+
+- 기본 2배속 빠른 재생
+- 1배속부터 16배속까지 0.1 단위 설정
+- 누르는 동안 작동 모드
+- 클릭 전환 모드
+- iframe 안의 HTML 동영상 지원
+- 동영상 위 오버레이가 있어도 클릭 위치 아래의 동영상 탐지
+
+## 권한 설명
+
+### storage
+
+사용자가 선택한 배속, 작동 방식, 속도 표시 여부를 저장하기 위해 사용합니다.
+
+### 모든 사이트 접근
+
+확장이 유튜브뿐 아니라 일반 웹사이트와 iframe 안의 HTML 동영상에도 동작해야 하므로 모든 URL에 콘텐츠 스크립트를 주입합니다. 방문 기록, 계정 정보, 페이지 내용은 수집하거나 외부로 전송하지 않습니다.
+
+## 개인정보 처리방침 URL
+
+https://github.com/codeyaki/click-faster/blob/main/PRIVACY.md
+
+## 지원 URL
+
+https://github.com/codeyaki/click-faster/issues
+
+## 소스 코드 URL
+
+https://github.com/codeyaki/click-faster
+
+## 릴리스 다운로드 URL
+
+https://github.com/codeyaki/click-faster/releases/latest

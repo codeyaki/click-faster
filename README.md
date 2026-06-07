@@ -12,6 +12,14 @@
 
 ## 설치
 
+### GitHub Releases에서 설치
+
+1. [최신 릴리스](https://github.com/codeyaki/click-faster/releases/latest)에서 `click-faster-버전-dev.zip` 파일을 내려받습니다.
+2. ZIP 파일의 압축을 풉니다.
+3. Chrome, Edge, Brave에서는 확장 관리 화면의 개발자 모드를 켜고 `압축해제된 확장 프로그램 로드`로 압축을 푼 폴더를 선택합니다.
+4. Firefox에서는 `about:debugging#/runtime/this-firefox`에서 `임시 부가 기능 로드`를 누르고 압축을 푼 폴더의 `manifest.json`을 선택합니다.
+5. 이미 열려 있던 동영상 페이지는 새로고침합니다.
+
 ### Chrome, Edge, Brave
 
 1. 브라우저에서 확장 관리 화면을 엽니다.
@@ -40,6 +48,20 @@ Safari는 WebExtension 변환 과정이 필요합니다. Xcode의 Safari Web Ext
 ```sh
 npm test
 ```
+
+아이콘과 릴리스 패키지를 다시 만들 때는 다음 명령을 사용합니다.
+
+```sh
+npm run generate:icons
+npm run package:extension
+```
+
+`dist/click-faster-버전-dev.zip`은 GitHub Releases에서 내려받아 개발자 모드로 설치하는 사용자용 패키지입니다. `dist/click-faster-버전-store.zip`은 스토어 업로드용으로 `manifest.json`이 ZIP 최상위에 들어갑니다.
+
+## 배포 준비 자료
+
+- [개인정보 처리방침](PRIVACY.md)
+- [스토어 등록 자료](docs/store-listing.md)
 
 ## 제한 사항
 

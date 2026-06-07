@@ -10,6 +10,7 @@ test("Manifest V3 확장으로 구성되어 있다", () => {
   assert.equal(manifest.manifest_version, 3);
   assert.equal(manifest.action.default_popup, "popup.html");
   assert.equal(manifest.options_ui.page, "options.html");
+  assert.equal(manifest.homepage_url, "https://github.com/codeyaki/click-faster");
 });
 
 test("모든 URL과 모든 프레임에 콘텐츠 스크립트를 주입한다", () => {
@@ -22,4 +23,14 @@ test("모든 URL과 모든 프레임에 콘텐츠 스크립트를 주입한다",
 
 test("설정 저장 권한을 포함한다", () => {
   assert.ok(manifest.permissions.includes("storage"));
+});
+
+test("브라우저와 스토어용 PNG 아이콘을 포함한다", () => {
+  const iconSizes = ["16", "32", "48", "128"];
+
+  for (const size of iconSizes) {
+    assert.equal(manifest.icons[size], `icons/icon-${size}.png`);
+    assert.equal(manifest.action.default_icon[size], `icons/icon-${size}.png`);
+    assert.ok(fs.existsSync(path.join(rootDir, manifest.icons[size])));
+  }
 });
