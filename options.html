@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Click Faster 설정</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body class="options-page">
+    <main class="panel">
+      <header class="header">
+        <div>
+          <p class="eyebrow">전체 사이트 설정</p>
+          <h1>Click Faster</h1>
+        </div>
+        <label class="switch" aria-label="확장 사용">
+          <input id="enabled" type="checkbox">
+          <span></span>
+        </label>
+      </header>
+
+      <section class="section" aria-labelledby="speed-label">
+        <div class="row">
+          <label id="speed-label" for="speedRange">빠른 재생 속도</label>
+          <output id="speedOutput" for="speedRange">2x</output>
+        </div>
+        <div class="speed-control">
+          <input id="speedRange" type="range" min="1" max="16" step="0.1">
+          <input id="speedNumber" type="number" min="1" max="16" step="0.1" inputmode="decimal" aria-label="빠른 재생 속도 숫자 입력">
+        </div>
+      </section>
+
+      <section class="section" aria-labelledby="mode-label">
+        <p id="mode-label" class="label">작동 방식</p>
+        <div class="segmented">
+          <label>
+            <input type="radio" name="mode" value="hold">
+            <span>누르는 동안</span>
+          </label>
+          <label>
+            <input type="radio" name="mode" value="toggle">
+            <span>클릭 전환</span>
+          </label>
+        </div>
+      </section>
+
+      <section class="section compact">
+        <label class="check">
+          <input id="showBadge" type="checkbox">
+          <span>속도 표시</span>
+        </label>
+      </section>
+
+      <footer class="footer">
+        <button id="reset" type="button">초기화</button>
+        <span id="status" role="status" aria-live="polite"></span>
+      </footer>
+    </main>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

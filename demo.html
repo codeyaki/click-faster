@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Click Faster 데모</title>
+    <link rel="icon" href="data:,">
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      body {
+        display: grid;
+        min-height: 100vh;
+        margin: 0;
+        place-items: center;
+        background: #edf1f5;
+        color: #151922;
+      }
+
+      main {
+        width: min(720px, calc(100vw - 32px));
+      }
+
+      h1 {
+        margin: 0 0 14px;
+        font-size: 28px;
+        letter-spacing: 0;
+      }
+
+      video {
+        display: block;
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #151922, #335c67);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>데모 동영상 영역</h1>
+      <video controls muted loop></video>
+    </main>
+    <script src="content.js"></script>
+  </body>
+</html>
