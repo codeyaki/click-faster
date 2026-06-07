@@ -5,7 +5,9 @@
     enabled: true,
     speed: 2,
     mode: "hold",
-    showBadge: true
+    showBadge: true,
+    compatibilityMode: true,
+    disabledHosts: []
   });
 
   const MIN_SPEED = 1;
@@ -13,6 +15,8 @@
   const SAVE_STATUS_MS = 900;
 
   const controls = {};
+  let currentHost = "";
+  let currentSettings = { ...DEFAULT_SETTINGS };
   let statusTimer = null;
 
   document.addEventListener("DOMContentLoaded", initialize);
@@ -23,19 +27,27 @@
     controls.speedNumber = document.querySelector("#speedNumber");
     controls.speedOutput = document.querySelector("#speedOutput");
     controls.showBadge = document.querySelector("#showBadge");
+    controls.compatibilityMode = document.querySelector("#compatibilityMode");
+    controls.siteToggle = document.querySelector("#siteToggle");
+    controls.siteStatus = document.querySelector("#siteStatus");
     controls.reset = document.querySelector("#reset");
     controls.status = document.querySelector("#status");
     controls.modeRadios = [...document.querySelectorAll('input[name="mode"]')];
 
     bindEvents();
-    loadSettings().then(renderSettings);
+    Promise.all([loadSettings(), getCurrentTabHost()]).then(([settings, host]) => {
+      currentHost = host;
+      renderSettings(settings);
+    });
   }
 
   function bindEvents() {
     controls.enabled.addEventListener("change", persistFromControls);
     controls.showBadge.addEventListener("change", persistFromControls);
+    controls.compatibilityMode.addEventListener("change", persistFromControls);
     controls.speedRange.addEventListener("input", handleSpeedRangeInput);
     controls.speedNumber.addEventListener("input", handleSpeedNumberInput);
+    controls.siteToggle.addEventListener("click", toggleCurrentSite);
     controls.reset.addEventListener("click", resetSettings);
 
     for (const radio of controls.modeRadios) {
@@ -109,6 +121,31 @@
     return null;
   }
 
+  function getCurrentTabHost() {
+    const extensionApi = getExtensionApi();
+
+    if (!extensionApi?.api?.tabs?.query) {
+      return Promise.resolve(normalizeHost(globalThis.location?.hostname ?? ""));
+    }
+
+    if (extensionApi.promiseBased) {
+      return extensionApi.api.tabs.query({ active: true, currentWindow: true })
+        .then((tabs) => normalizeHostFromUrl(tabs?.[0]?.url))
+        .catch(() => "");
+    }
+
+    return new Promise((resolve) => {
+      extensionApi.api.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (extensionApi.api.runtime?.lastError) {
+          resolve("");
+          return;
+        }
+
+        resolve(normalizeHostFromUrl(tabs?.[0]?.url));
+      });
+    });
+  }
+
   function persistFromControls() {
     saveSettings(readControls());
   }
@@ -125,19 +162,59 @@
       enabled: controls.enabled.checked,
       speed: Number(controls.speedNumber.value),
       mode: checkedMode,
-      showBadge: controls.showBadge.checked
+      showBadge: controls.showBadge.checked,
+      compatibilityMode: controls.compatibilityMode.checked,
+      disabledHosts: currentSettings.disabledHosts
     };
   }
 
   function renderSettings(settings) {
     const normalizedSettings = normalizeSettings(settings);
+    currentSettings = normalizedSettings;
     controls.enabled.checked = normalizedSettings.enabled;
     controls.showBadge.checked = normalizedSettings.showBadge;
+    controls.compatibilityMode.checked = normalizedSettings.compatibilityMode;
     setSpeedControls(normalizedSettings.speed);
 
     for (const radio of controls.modeRadios) {
       radio.checked = radio.value === normalizedSettings.mode;
     }
+
+    renderSiteStatus(normalizedSettings);
+  }
+
+  function renderSiteStatus(settings) {
+    if (!currentHost) {
+      controls.siteToggle.disabled = true;
+      controls.siteToggle.textContent = "현재 사이트 확인 불가";
+      controls.siteStatus.textContent = "";
+      return;
+    }
+
+    const disabled = isHostDisabled(currentHost, settings.disabledHosts);
+    controls.siteToggle.disabled = false;
+    controls.siteToggle.textContent = disabled ? "현재 사이트에서 켜기" : "현재 사이트에서 끄기";
+    controls.siteStatus.textContent = disabled ? `${currentHost} 제외됨` : currentHost;
+  }
+
+  function toggleCurrentSite() {
+    if (!currentHost) {
+      return;
+    }
+
+    const disabledHosts = currentSettings.disabledHosts.filter((host) => !hostMatches(currentHost, host));
+
+    if (!isHostDisabled(currentHost, currentSettings.disabledHosts)) {
+      disabledHosts.push(currentHost);
+    }
+
+    const nextSettings = {
+      ...readControls(),
+      disabledHosts: [...new Set(disabledHosts.map(normalizeHost).filter(Boolean))]
+    };
+
+    renderSettings(nextSettings);
+    saveSettings(nextSettings);
   }
 
   function setSpeedControls(speed) {
@@ -163,11 +240,17 @@
   }
 
   function normalizeSettings(rawSettings = {}) {
+    const disabledHosts = Array.isArray(rawSettings.disabledHosts)
+      ? [...new Set(rawSettings.disabledHosts.map(normalizeHost).filter(Boolean))]
+      : [];
+
     return {
       enabled: rawSettings.enabled !== false,
       speed: normalizeSpeed(rawSettings.speed),
       mode: rawSettings.mode === "toggle" ? "toggle" : "hold",
-      showBadge: rawSettings.showBadge !== false
+      showBadge: rawSettings.showBadge !== false,
+      compatibilityMode: rawSettings.compatibilityMode !== false,
+      disabledHosts
     };
   }
 
@@ -184,5 +267,35 @@
 
   function clamp(value, min, max) {
     return Math.min(max, Math.max(min, value));
+  }
+
+  function normalizeHostFromUrl(url) {
+    try {
+      return normalizeHost(new URL(url).hostname);
+    } catch {
+      return "";
+    }
+  }
+
+  function normalizeHost(hostname) {
+    return String(hostname ?? "")
+      .trim()
+      .toLowerCase()
+      .replace(/\.$/, "")
+      .replace(/^www\./, "");
+  }
+
+  function isHostDisabled(hostname, disabledHosts = []) {
+    const normalizedHostname = normalizeHost(hostname);
+
+    if (!normalizedHostname) {
+      return false;
+    }
+
+    return disabledHosts.map(normalizeHost).filter(Boolean).some((host) => hostMatches(normalizedHostname, host));
+  }
+
+  function hostMatches(hostname, targetHost) {
+    return hostname === targetHost || hostname.endsWith(`.${targetHost}`);
   }
 })();

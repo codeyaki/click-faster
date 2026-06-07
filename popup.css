@@ -126,6 +126,13 @@ h1 {
   padding-bottom: 12px;
 }
 
+.hint {
+  margin: 8px 0 0 25px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 output {
   min-width: 48px;
   border-radius: 999px;
@@ -210,6 +217,23 @@ input[type="number"] {
   min-height: 38px;
   padding-top: 12px;
   border-top: 1px solid var(--line);
+}
+
+.site-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+
+#siteStatus {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 button {

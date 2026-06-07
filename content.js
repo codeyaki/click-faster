@@ -5,7 +5,9 @@
     enabled: true,
     speed: 2,
     mode: "hold",
-    showBadge: true
+    showBadge: true,
+    compatibilityMode: true,
+    disabledHosts: []
   });
 
   const MIN_SPEED = 1;
@@ -13,6 +15,12 @@
   const HOLD_CLICK_SUPPRESS_MS = 220;
   const CLICK_SUPPRESS_WINDOW_MS = 700;
   const BADGE_HIDE_MS = 500;
+  const COMPATIBILITY_RULES = Object.freeze([
+    {
+      hosts: ["netflix.com"],
+      maxSpeed: 1.5
+    }
+  ]);
 
   const state = {
     settings: { ...DEFAULT_SETTINGS },
@@ -99,31 +107,37 @@
   function normalizeSettings(rawSettings = {}) {
     const speed = Number(rawSettings.speed);
     const mode = rawSettings.mode === "toggle" ? "toggle" : "hold";
+    const disabledHosts = Array.isArray(rawSettings.disabledHosts)
+      ? [...new Set(rawSettings.disabledHosts.map(normalizeHost).filter(Boolean))]
+      : [];
 
     return {
       enabled: rawSettings.enabled !== false,
       speed: clamp(Number.isFinite(speed) ? speed : DEFAULT_SETTINGS.speed, MIN_SPEED, MAX_SPEED),
       mode,
-      showBadge: rawSettings.showBadge !== false
+      showBadge: rawSettings.showBadge !== false,
+      compatibilityMode: rawSettings.compatibilityMode !== false,
+      disabledHosts
     };
   }
 
   function applySettings(nextSettings) {
     const previousMode = state.settings.mode;
-    const previousEnabled = state.settings.enabled;
+    const wasActive = isExtensionActive();
     state.settings = normalizeSettings(nextSettings);
+    const isActive = isExtensionActive();
 
-    if (!state.settings.enabled || previousMode !== state.settings.mode || previousEnabled !== state.settings.enabled) {
+    if (!isActive || previousMode !== state.settings.mode || wasActive !== isActive) {
       restoreAllVideos();
     }
 
-    if (state.settings.enabled) {
+    if (isActive) {
       updateActiveRates();
     }
   }
 
   function handlePointerDown(event) {
-    if (!state.settings.enabled || state.settings.mode !== "hold" || isNonPrimaryMouseButton(event)) {
+    if (!isExtensionActive() || state.settings.mode !== "hold" || isNonPrimaryMouseButton(event)) {
       return;
     }
 
@@ -166,7 +180,7 @@
   }
 
   function handleClick(event) {
-    if (!state.settings.enabled) {
+    if (!isExtensionActive()) {
       return;
     }
 
@@ -196,7 +210,7 @@
       rateMap.set(video, video.playbackRate);
     }
 
-    setPlaybackRate(video, state.settings.speed);
+    setPlaybackRate(video, getEffectiveSpeed());
   }
 
   function toggleFastRate(video) {
@@ -237,11 +251,11 @@
 
   function updateActiveRates() {
     for (const video of state.holdRates.keys()) {
-      setPlaybackRate(video, state.settings.speed);
+      setPlaybackRate(video, getEffectiveSpeed());
     }
 
     for (const video of state.toggleRates.keys()) {
-      setPlaybackRate(video, state.settings.speed);
+      setPlaybackRate(video, getEffectiveSpeed());
     }
   }
 
@@ -271,6 +285,50 @@
     }
 
     return false;
+  }
+
+  function isExtensionActive() {
+    return state.settings.enabled && !isHostDisabled(getCurrentHostname(), state.settings.disabledHosts);
+  }
+
+  function getEffectiveSpeed(settings = state.settings, hostname = getCurrentHostname()) {
+    const normalizedSettings = normalizeSettings(settings);
+    const rule = normalizedSettings.compatibilityMode ? getCompatibilityRule(hostname) : null;
+    const maxSpeed = rule?.maxSpeed ?? MAX_SPEED;
+
+    return clamp(normalizedSettings.speed, MIN_SPEED, maxSpeed);
+  }
+
+  function getCompatibilityRule(hostname = getCurrentHostname()) {
+    const normalizedHostname = normalizeHost(hostname);
+
+    return COMPATIBILITY_RULES.find((rule) => rule.hosts.some((host) => hostMatches(normalizedHostname, host))) ?? null;
+  }
+
+  function isHostDisabled(hostname, disabledHosts = []) {
+    const normalizedHostname = normalizeHost(hostname);
+
+    if (!normalizedHostname) {
+      return false;
+    }
+
+    return disabledHosts.map(normalizeHost).filter(Boolean).some((host) => hostMatches(normalizedHostname, host));
+  }
+
+  function hostMatches(hostname, targetHost) {
+    return hostname === targetHost || hostname.endsWith(`.${targetHost}`);
+  }
+
+  function getCurrentHostname() {
+    return normalizeHost(globalThis.location?.hostname ?? "");
+  }
+
+  function normalizeHost(hostname) {
+    return String(hostname ?? "")
+      .trim()
+      .toLowerCase()
+      .replace(/\.$/, "")
+      .replace(/^www\./, "");
   }
 
   function shouldSuppressClick(event) {
@@ -433,7 +491,7 @@
     const badge = ensureBadge();
     const rect = video.getBoundingClientRect();
 
-    badge.textContent = `${formatSpeed(state.settings.speed)}x`;
+    badge.textContent = `${formatSpeed(getEffectiveSpeed())}x`;
     badge.style.left = `${Math.max(8, rect.left + 12)}px`;
     badge.style.top = `${Math.max(8, rect.top + 12)}px`;
     badge.hidden = false;
@@ -504,5 +562,9 @@
     globalThis.__CLICK_FASTER_TEST__.normalizeSettings = normalizeSettings;
     globalThis.__CLICK_FASTER_TEST__.findVideoAtPoint = findVideoAtPoint;
     globalThis.__CLICK_FASTER_TEST__.formatSpeed = formatSpeed;
+    globalThis.__CLICK_FASTER_TEST__.getEffectiveSpeed = getEffectiveSpeed;
+    globalThis.__CLICK_FASTER_TEST__.getCompatibilityRule = getCompatibilityRule;
+    globalThis.__CLICK_FASTER_TEST__.isHostDisabled = isHostDisabled;
+    globalThis.__CLICK_FASTER_TEST__.normalizeHost = normalizeHost;
   }
 })();

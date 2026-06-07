@@ -21,7 +21,8 @@ test("모든 URL과 모든 프레임에 콘텐츠 스크립트를 주입한다",
   assert.equal(manifest.content_scripts[0].all_frames, true);
 });
 
-test("설정 저장 권한을 포함한다", () => {
+test("필요한 확장 권한을 포함한다", () => {
+  assert.ok(manifest.permissions.includes("activeTab"));
   assert.ok(manifest.permissions.includes("storage"));
 });
 

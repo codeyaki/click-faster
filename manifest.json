@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Click Faster",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "모든 웹 동영상에서 화면을 누르거나 클릭해 설정한 배속으로 빠르게 재생합니다.",
   "homepage_url": "https://github.com/codeyaki/click-faster",
   "icons": {
@@ -11,6 +11,7 @@
     "128": "icons/icon-128.png"
   },
   "permissions": [
+    "activeTab",
     "storage"
   ],
   "host_permissions": [

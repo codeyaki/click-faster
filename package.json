@@ -1,6 +1,6 @@
 {
   "name": "click-faster",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "description": "모든 웹 동영상에서 클릭 또는 누르기로 설정 배속을 적용하는 브라우저 확장",
   "scripts": {
